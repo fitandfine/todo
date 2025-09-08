@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
 
 #define FILE_NAME "tasks.txt"
 #define MAX_TASK_LEN 256
@@ -11,10 +10,8 @@ void addTask(const char *task);
 void listTasks();
 void deleteTask(int taskNumber);
 void markDone(int taskNumber);
+void markUndone(int taskNumber);
 void trimNewline(char *str);
-
-
-
 
 // --- Main entry point ---
 int main(int argc, char *argv[]) {
@@ -24,6 +21,7 @@ int main(int argc, char *argv[]) {
         printf("  %s list                      -> List tasks\n", argv[0]);
         printf("  %s del <task_number>         -> Delete a task\n", argv[0]);
         printf("  %s done <task_number>        -> Mark task as done\n", argv[0]);
+        printf("  %s undone <task_number>      -> Mark task as not done\n", argv[0]);
         return 1;
     }
 
@@ -47,6 +45,12 @@ int main(int argc, char *argv[]) {
             return 1;
         }
         markDone(atoi(argv[2]));
+    } else if (strcmp(argv[1], "undone") == 0) {
+        if (argc < 3) {
+            printf("Error: No task number provided.\n");
+            return 1;
+        }
+        markUndone(atoi(argv[2]));
     } else {
         printf("Unknown command: %s\n", argv[1]);
     }
@@ -54,24 +58,24 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-// --- Helper to remove newline characters from fgets input ---
+// --- Helper: remove trailing newline ---
 void trimNewline(char *str) {
     str[strcspn(str, "\n")] = '\0';
 }
 
-// --- Append a new task to the file ---
+// --- Add task ---
 void addTask(const char *task) {
     FILE *file = fopen(FILE_NAME, "a");
     if (file == NULL) {
         perror("Error opening file");
         return;
     }
-    fprintf(file, "[ ] %s\n", task); // "[ ]" means not done
+    fprintf(file, "[ ] %s\n", task); // default not done
     fclose(file);
     printf("Task added: %s\n", task);
 }
 
-// --- Display all tasks from the file ---
+// --- List tasks ---
 void listTasks() {
     FILE *file = fopen(FILE_NAME, "r");
     if (file == NULL) {
@@ -88,7 +92,7 @@ void listTasks() {
     fclose(file);
 }
 
-// --- Delete a task by number (rewrite file without it) ---
+// --- Delete task ---
 void deleteTask(int taskNumber) {
     FILE *file = fopen(FILE_NAME, "r");
     if (file == NULL) {
@@ -129,7 +133,7 @@ void deleteTask(int taskNumber) {
     }
 }
 
-// --- Mark a task as done ---
+// --- Mark task as done ---
 void markDone(int taskNumber) {
     FILE *file = fopen(FILE_NAME, "r");
     if (file == NULL) {
@@ -150,12 +154,11 @@ void markDone(int taskNumber) {
 
     while (fgets(task, sizeof(task), file)) {
         if (count == taskNumber) {
-            // Replace "[ ]" with "[x]" to indicate completion
             if (strncmp(task, "[ ]", 3) == 0) {
                 fprintf(temp, "[x]%s", task + 3);
                 marked = 1;
             } else {
-                fputs(task, temp); // already marked done
+                fputs(task, temp);
             }
         } else {
             fputs(task, temp);
@@ -173,5 +176,51 @@ void markDone(int taskNumber) {
         printf("Task %d marked as done.\n", taskNumber);
     } else {
         printf("Task number %d not found or already done.\n", taskNumber);
+    }
+}
+
+// --- Mark task as not done ---
+void markUndone(int taskNumber) {
+    FILE *file = fopen(FILE_NAME, "r");
+    if (file == NULL) {
+        printf("No tasks found.\n");
+        return;
+    }
+
+    FILE *temp = fopen("temp.txt", "w");
+    if (temp == NULL) {
+        perror("Error creating temp file");
+        fclose(file);
+        return;
+    }
+
+    char task[MAX_TASK_LEN];
+    int count = 1;
+    int undone = 0;
+
+    while (fgets(task, sizeof(task), file)) {
+        if (count == taskNumber) {
+            if (strncmp(task, "[x]", 3) == 0) {
+                fprintf(temp, "[ ]%s", task + 3);
+                undone = 1;
+            } else {
+                fputs(task, temp);
+            }
+        } else {
+            fputs(task, temp);
+        }
+        count++;
+    }
+
+    fclose(file);
+    fclose(temp);
+
+    remove(FILE_NAME);
+    rename("temp.txt", FILE_NAME);
+
+    if (undone) {
+        printf("Task %d marked as not done.\n", taskNumber);
+    } else {
+        printf("Task number %d not found or already undone.\n", taskNumber);
     }
 }
