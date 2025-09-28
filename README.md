@@ -22,11 +22,17 @@ Tasks are saved in `tasks.txt` so they persist between runs.
 gcc todo.c -o todo
 
 ## Usage
-./todo add "Buy groceries"     # Add a task
-./todo list                    # Show all tasks
-./todo done 1                  # Mark task 1 as done
-./todo undone 1                # Revert task 1 back to not done
-./todo del 2                   # Delete task number 2
+```
+**./todo add "Buy groceries"     # Add a task**
+
+**./todo list                    # Show all tasks**
+
+**./todo done 1                  # Mark task 1 as done**
+
+**./todo undone 1                # Revert task 1 back to not done**
+
+**./todo del 2                   # Delete task number 2**
+```
 ---
 ## 🛠️ Function Documentation
 ### main(int argc, char *argv[])
