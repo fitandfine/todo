@@ -18,7 +18,7 @@ Tasks are saved in `tasks.txt` so they persist between runs.
 
 ---
 
-## ⚙️ Installation & Compilation (Ubuntu/Linux)
+##  Installation & Compilation (Ubuntu/Linux)
 gcc todo.c -o todo
 
 ## Usage
